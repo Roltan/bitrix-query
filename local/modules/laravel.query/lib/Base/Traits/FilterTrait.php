@@ -161,8 +161,8 @@ trait FilterTrait
      *   ->whereLike('NAME', 'iphone')
      *   => NAME LIKE '%iphone%'
      *
-     * @param string $field  Поле инфоблока
-     * @param string $value  Поисковая строка (без %)
+     * @param string $field Поле инфоблока
+     * @param string $value Поисковая строка (без %)
      *
      * @return static
      */
@@ -264,9 +264,9 @@ trait FilterTrait
      *   ->orWhereProperty('COLOR', 'red')
      *   ->orWhereProperty('PRICE', '>=', 1000)
      *
-     * @param string $propertyCode     Код свойства (без PROPERTY_)
-     * @param mixed  $operatorOrValue  Оператор (=, !=, >, <, like, и т.д.) или значение
-     * @param mixed  $value            Значение (если указан оператор)
+     * @param string $propertyCode Код свойства (без PROPERTY_)
+     * @param mixed $operatorOrValue Оператор (=, !=, >, <, like, и т.д.) или значение
+     * @param mixed $value Значение (если указан оператор)
      *
      * @return static
      */
@@ -405,9 +405,9 @@ trait FilterTrait
      *   ]
      * ]
      *
+     * @return array<string, mixed>
      * @internal используется только внутри Query Builder
      *
-     * @return array<string, mixed>
      */
     protected function buildFilter(): array
     {
@@ -441,16 +441,16 @@ trait FilterTrait
     private function resolveOperatorPrefix(string $operator): string
     {
         return match (strtolower($operator)) {
-            '='             => '=',
-            '!=', '!'       => '!',
-            '>'             => '>',
-            '>='            => '>=',
-            '<'             => '<',
-            '<='            => '<=',
-            'like', '%'     => '%',
-            '!like', '!%'   => '!%',
+            '=' => '=',
+            '!=', '!' => '!',
+            '>' => '>',
+            '>=' => '>=',
+            '<' => '<',
+            '<=' => '<=',
+            'like', '%' => '%',
+            '!like', '!%' => '!%',
             'fulltext', '?' => '?',
-            default         => throw new \InvalidArgumentException("Unknown operator: $operator"),
+            default => throw new \InvalidArgumentException("Unknown operator: $operator"),
         };
     }
 
