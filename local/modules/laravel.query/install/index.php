@@ -2,10 +2,10 @@
 
 use Bitrix\Main\ModuleManager;
 
-class dev_query extends CModule
+class laravel_query extends CModule
 {
-    public $MODULE_ID = "rolan.query";
-    public $MODULE_NAME = "Dev Query ORM";
+    public $MODULE_ID = "laravel.query";
+    public $MODULE_NAME = "Laravel Query ORM";
     public $MODULE_DESCRIPTION = "Laravel-like query builder for Bitrix";
     public $MODULE_VERSION;
     public $MODULE_VERSION_DATE;
