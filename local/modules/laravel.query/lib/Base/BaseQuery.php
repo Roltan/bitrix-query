@@ -37,7 +37,7 @@ abstract class BaseQuery
     // ──────────────────────────────────────────────
 
     /** Сортировка: ['FIELD' => 'ASC|DESC'] */
-    protected array $order = ['SORT' => 'ASC'];
+    protected array $order = [];
 
     /** AND-условия фильтра */
     protected array $filter = [];

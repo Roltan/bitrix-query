@@ -29,7 +29,7 @@ trait AggregatesTrait
      */
     public function get(): array
     {
-        $res   = $this->executeGetList();
+        $res = $this->executeGetList();
         $items = [];
 
         while ($row = $res->Fetch()) {
@@ -50,18 +50,18 @@ trait AggregatesTrait
     public function first(): ?array
     {
         // Временно ставим limit(1) не меняя оригинальный limitValue
-        $originalLimit  = $this->limitValue;
-        $originalNav    = $this->navParams;
+        $originalLimit = $this->limitValue;
+        $originalNav = $this->navParams;
 
         $this->limitValue = 1;
-        $this->navParams  = false;
+        $this->navParams = false;
 
         $res = $this->executeGetList();
         $row = $res->Fetch() ?: null;
 
         // Восстанавливаем
         $this->limitValue = $originalLimit;
-        $this->navParams  = $originalNav;
+        $this->navParams = $originalNav;
 
         return $row ?: null;
     }
@@ -201,7 +201,7 @@ trait AggregatesTrait
             }
         }
 
-        $rows  = $this->get();
+        $rows = $this->get();
         $result = [];
 
         foreach ($rows as $row) {

@@ -200,11 +200,11 @@ class ElementQuery extends BaseQuery
     protected function executeGetList(): \CIBlockResult
     {
         return \CIBlockElement::GetList(
-            $this->order,
+            $this->order ?? [],
             $this->buildFilter(),
-            $this->groupBy,
+            $this->groupBy ?? false,
             $this->buildNavParams(),
-            $this->select
+            $this->select ?? []
         );
     }
 
