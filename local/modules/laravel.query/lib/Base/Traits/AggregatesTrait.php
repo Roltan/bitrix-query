@@ -87,6 +87,16 @@ trait AggregatesTrait
      *     });
      *
      * Callback может вернуть false чтобы прервать обход.
+     *
+     * @param int $size Размер чанка
+     * @param callable(array<int, array<string, mixed>>, int): (bool|null) $callback
+     *         Callback получает:
+     *           - array $items — массив элементов (каждый элемент — ассоциативный массив)
+     *           - int   $page  — номер текущей страницы (с 1)
+     *
+     *         Если callback возвращает false — обход прерывается.
+     *
+     * @return bool false если прервано callback'ом, иначе true
      */
     public function chunk(int $size, callable $callback): bool
     {

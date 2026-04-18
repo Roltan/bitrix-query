@@ -201,7 +201,7 @@ class ElementQuery extends BaseQuery
     {
         return \CIBlockElement::GetList(
             $this->order,
-            $this->filter,
+            $this->buildFilter(),
             $this->groupBy,
             $this->buildNavParams(),
             $this->select
@@ -215,7 +215,7 @@ class ElementQuery extends BaseQuery
     {
         $result = \CIBlockElement::GetList(
             $this->order,
-            $this->filter,
+            $this->buildFilter(),
             [],     // пустой массив — Битрикс вернёт число
             false,
             $this->select

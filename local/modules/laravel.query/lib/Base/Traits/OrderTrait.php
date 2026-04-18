@@ -2,6 +2,8 @@
 
 namespace Query\Base\Traits;
 
+use Psr\Log\InvalidArgumentException;
+
 /**
  * Методы сортировки (ORDER BY часть запроса).
  *
@@ -18,6 +20,10 @@ trait OrderTrait
      */
     public function orderBy(string|array $field, string $direction = 'ASC'): static
     {
+        if(!in_array($direction, ['ASC', 'DESC'], true)) {
+            throw new InvalidArgumentException('Invalid direction sort');
+        }
+
         if (is_array($field)) {
             $this->order = array_change_key_case($field, CASE_UPPER);
         } else {
@@ -33,6 +39,10 @@ trait OrderTrait
      */
     public function addOrderBy(string $field, string $direction = 'ASC'): static
     {
+        if(!in_array($direction, ['ASC', 'DESC'], true)) {
+            throw new InvalidArgumentException('Invalid direction sort');
+        }
+
         $this->order[strtoupper($field)] = strtoupper($direction);
         return $this;
     }
@@ -57,11 +67,21 @@ trait OrderTrait
     }
 
     /**
-     * Сортировка по полю свойства инфоблока.
+     * Сортировка по полю свойства инфоблока, полностью заменяя предыдущую
      *
      * ->orderByProperty('PRICE', 'DESC')
      */
     public function orderByProperty(string $propertyCode, string $direction = 'ASC'): static
+    {
+        return $this->orderBy('PROPERTY_' . strtoupper($propertyCode), $direction);
+    }
+
+    /**
+     * Добавить поле сортировки по полю свойства инфоблока не затирая предыдущие.
+     *
+     * ->addOrderByProperty('PRICE', 'DESC')
+     */
+    public function addOrderByProperty(string $propertyCode, string $direction = 'ASC'): static
     {
         return $this->addOrderBy('PROPERTY_' . strtoupper($propertyCode), $direction);
     }

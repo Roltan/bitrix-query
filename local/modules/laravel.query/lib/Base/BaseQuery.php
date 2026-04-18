@@ -39,8 +39,20 @@ abstract class BaseQuery
     /** Сортировка: ['FIELD' => 'ASC|DESC'] */
     protected array $order = ['SORT' => 'ASC'];
 
-    /** Фильтр (передаётся в GetList как $arFilter) */
+    /** AND-условия фильтра */
     protected array $filter = [];
+
+    /**
+     * Зафиксированные OR-группы — вложенные массивы с LOGIC=OR.
+     * Каждый элемент — готовый блок для слияния с $filter в buildFilter().
+     */
+    protected array $orGroups = [];
+
+    /**
+     * Буфер текущей открытой OR-группы.
+     * Фиксируется при вызове orGroup(), orRaw() или buildFilter().
+     */
+    protected array $currentOrGroup = [];
 
     /** GROUP BY: массив полей или false (без группировки) */
     protected array|false $groupBy = false;

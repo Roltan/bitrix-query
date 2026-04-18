@@ -21,6 +21,10 @@ trait SelectTrait
      */
     public function select(array $fields): static
     {
+        if (empty($fields)) {
+            throw new \InvalidArgumentException('Select cannot be empty');
+        }
+
         $this->select = $fields;
         return $this;
     }
@@ -32,7 +36,14 @@ trait SelectTrait
      */
     public function addSelect(string ...$fields): static
     {
-        array_push($this->select, ...$fields);
+        if (empty($fields)) {
+            throw new \InvalidArgumentException('Select cannot be empty');
+        }
+
+        $this->select = array_values(array_unique(array_merge(
+            $this->select,
+            $fields
+        )));
         return $this;
     }
 
@@ -53,6 +64,7 @@ trait SelectTrait
     public function withProperties(): static
     {
         if (!in_array('PROPERTY_*', $this->select, true)) {
+            $this->select = array_values(array_diff($this->select, array_filter($this->select, fn($f) => str_starts_with($f, 'PROPERTY_'))));
             $this->select[] = 'PROPERTY_*';
         }
         return $this;
@@ -65,6 +77,9 @@ trait SelectTrait
      */
     public function withProperty(string ...$propertyCodes): static
     {
+        if (empty($propertyCodes)) {
+            throw new \InvalidArgumentException('Select cannot be empty');
+        }
         foreach ($propertyCodes as $code) {
             $field = 'PROPERTY_' . strtoupper($code);
             if (!in_array($field, $this->select, true)) {
@@ -83,7 +98,7 @@ trait SelectTrait
      */
     public function groupBy(array $fields = []): static
     {
-        $this->groupBy = $fields;
+        $this->groupBy = $fields === [] ? [] : $fields;
         return $this;
     }
 }

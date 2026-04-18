@@ -22,6 +22,10 @@ trait PaginationTrait
      */
     public function limit(int $limit): static
     {
+        if ($limit < 1) {
+            throw new \InvalidArgumentException('Limit must be >= 1');
+        }
+
         $this->limitValue = $limit;
         $this->navParams  = false; // сбрасываем paginate если был
         return $this;
@@ -35,6 +39,10 @@ trait PaginationTrait
      */
     public function offset(int $offset): static
     {
+        if ($this->limitValue === false) {
+            throw new \LogicException('Offset requires limit()');
+        }
+
         $this->offsetValue = $offset;
         return $this;
     }
@@ -66,11 +74,11 @@ trait PaginationTrait
      * ->paginate(20)
      * ->paginate(20, pageParam: 'PAGEN_2')  // если на странице несколько списков
      */
-    public function paginate(int $pageSize, string $pageParam = 'PAGEN_1'): static
+    public function paginate(int $pageSize, string $pageParam = 'PAGEN_1', ?int $page = null): static
     {
         $this->navParams  = [
             'nPageSize'    => $pageSize,
-            'nCurrentPage' => (int)($_REQUEST[$pageParam] ?? 1),
+            'nCurrentPage' => $page ?? (int)($_REQUEST[$pageParam] ?? 1),
         ];
         $this->limitValue  = false; // сбрасываем limit если был
         $this->offsetValue = 0;
@@ -96,6 +104,7 @@ trait PaginationTrait
     /**
      * Передать параметры навигации GetList напрямую (raw).
      * Escape-хатч для нестандартных случаев (nElementID и т.д.).
+     * ⚠ Пользователь сам отвечает за корректность структуры
      */
     public function navRaw(array $params): static
     {
