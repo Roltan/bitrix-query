@@ -384,7 +384,7 @@ trait FilterTrait
      */
     public function whereRaw(array $filterPart): static
     {
-        $this->filter = array_merge($this->filter, $filterPart);
+        $this->filter[] = $filterPart;
         return $this;
     }
 

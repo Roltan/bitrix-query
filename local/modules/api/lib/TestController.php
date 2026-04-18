@@ -19,8 +19,14 @@ class TestController extends Controller
 
     public function testAction()
     {
-        dd(ElementQuery::query()
+        $query = ElementQuery::query()
             ->iblock(5)
-            ->first());
+            ->select(['ID'])
+            ->whereRaw([[
+                'LOGIC' => 'OR',
+                ['%NAME' => 'QB_TEST'],
+                ['><SORT' => [100, 300]]
+            ]]);
+        dd($query->get());
     }
 }
