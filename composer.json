@@ -1,0 +1,11 @@
+{
+  "require": {
+    "symfony/var-dumper": "^2.8",
+    "firebase/php-jwt": "^6.0"
+  },
+  "config": {
+    "allow-plugins": {
+      "composer/installers": true
+    }
+  }
+}

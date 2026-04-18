@@ -1,0 +1,11 @@
+/bitrix
+/upload
+/vendor
+.DS_Store
+.idea/
+.vscode/
+/front
+.htaccess
+/.osp
+log.txt
+composer.phar
