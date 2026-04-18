@@ -16,9 +16,19 @@ namespace Query\Base\Traits;
 trait PaginationTrait
 {
     /**
-     * Ограничить количество возвращаемых записей.
+     * Ограничить количество возвращаемых записей (LIMIT).
      *
-     * ->limit(20)
+     * Пример:
+     *   ->limit(20)
+     *
+     * ⚠ Сбрасывает paginate()
+     *
+     * @param int $limit
+     *        Количество записей (>= 1)
+     *
+     * @throws \InvalidArgumentException если $limit < 1
+     *
+     * @return static
      */
     public function limit(int $limit): static
     {
@@ -32,10 +42,21 @@ trait PaginationTrait
     }
 
     /**
-     * Смещение от начала выборки.
-     * Работает только в паре с limit().
+     * Смещение (OFFSET) относительно начала выборки.
      *
-     * ->limit(20)->offset(40)  // третья страница по 20 элементов
+     * Работает только вместе с limit().
+     *
+     * Пример:
+     *   ->limit(20)->offset(40)
+     *
+     * ⚠ Bitrix реализует через nOffset
+     *
+     * @param int $offset
+     *        Количество пропускаемых записей
+     *
+     * @throws \LogicException если limit() не задан
+     *
+     * @return static
      */
     public function offset(int $offset): static
     {
@@ -48,9 +69,11 @@ trait PaginationTrait
     }
 
     /**
-     * Взять первые N записей — синтаксический сахар для limit().
+     * Взять первые N записей (alias для limit()).
      *
-     * ->take(5)
+     * @param int $count
+     *
+     * @return static
      */
     public function take(int $count): static
     {
@@ -58,9 +81,14 @@ trait PaginationTrait
     }
 
     /**
-     * Пропустить N записей — синтаксический сахар для offset().
+     * Пропустить N записей (alias для offset()).
      *
-     * ->skip(20)->take(10)
+     * Обычно используется вместе с take():
+     *   ->skip(20)->take(10)
+     *
+     * @param int $count
+     *
+     * @return static
      */
     public function skip(int $count): static
     {
@@ -68,11 +96,23 @@ trait PaginationTrait
     }
 
     /**
-     * Постраничная навигация в стиле Битрикса (CDBResult::NavQuery).
-     * Номер страницы читается из $_REQUEST[$pageParam].
+     * Постраничная навигация (Bitrix CDBResult style).
      *
-     * ->paginate(20)
-     * ->paginate(20, pageParam: 'PAGEN_2')  // если на странице несколько списков
+     * Использует $_REQUEST для определения страницы,
+     * если параметр $page не передан явно.
+     *
+     * Пример:
+     *   ->paginate(20)
+     *   ->paginate(20, 'PAGEN_2')
+     *   ->paginate(20, 'PAGEN_1', 3)
+     *
+     * ⚠ Сбрасывает limit/offset
+     *
+     * @param int      $pageSize   Количество элементов на страницу
+     * @param string   $pageParam  Имя GET/REQUEST параметра страницы
+     * @param int|null $page       Явный номер страницы (override $_REQUEST)
+     *
+     * @return static
      */
     public function paginate(int $pageSize, string $pageParam = 'PAGEN_1', ?int $page = null): static
     {
@@ -86,9 +126,15 @@ trait PaginationTrait
     }
 
     /**
-     * Навигация по конкретной странице без зависимости от $_REQUEST.
+     * Явная постраничная навигация без $_REQUEST.
      *
-     * ->forPage(3, 20)  // третья страница по 20 элементов
+     * Пример:
+     *   ->forPage(3, 20)
+     *
+     * @param int $page      Номер страницы (>= 1)
+     * @param int $pageSize  Размер страницы
+     *
+     * @return static
      */
     public function forPage(int $page, int $pageSize): static
     {
@@ -102,9 +148,18 @@ trait PaginationTrait
     }
 
     /**
-     * Передать параметры навигации GetList напрямую (raw).
-     * Escape-хатч для нестандартных случаев (nElementID и т.д.).
-     * ⚠ Пользователь сам отвечает за корректность структуры
+     * Передать "сырые" параметры навигации Bitrix.
+     *
+     * ⚠ Escape-хук: bypass всей логики pagination builder-а.
+     *
+     * Используется для нестандартных кейсов:
+     * - nElementID
+     * - кастомные навигационные параметры Bitrix
+     *
+     * @param array<string, mixed> $params
+     *        Полный массив параметров CDBResult navigation
+     *
+     * @return static
      */
     public function navRaw(array $params): static
     {
@@ -119,9 +174,16 @@ trait PaginationTrait
     // ──────────────────────────────────────────────
 
     /**
-     * Собрать параметры навигации для передачи в GetList.
+     * Собрать параметры навигации для CIBlockElement::GetList.
+     *
+     * Приоритет:
+     *   1. paginate()/forPage() (navParams)
+     *   2. limit()/offset() (nTopCount + nOffset)
+     *   3. false (без ограничений)
      *
      * @internal используется в BaseQuery::executeGetList()
+     *
+     * @return array<string, mixed>|false
      */
     protected function buildNavParams(): array|false
     {

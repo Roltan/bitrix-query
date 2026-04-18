@@ -12,12 +12,17 @@ namespace Query\Base\Traits;
 trait SelectTrait
 {
     /**
-     * Задать список полей для выборки, полностью заменяя предыдущий.
+     * Задать список полей для выборки (полностью заменяет предыдущие).
      *
-     * ->select(['ID', 'NAME', 'SORT'])
-     * ->select(['ID', 'NAME', 'PROPERTY_PRICE', 'PROPERTY_COLOR'])
+     * @param array<int, string> $fields Список полей SELECT
      *
-     * Если не вызывать — GetList вернёт все базовые поля (поведение по умолчанию).
+     * @return static
+     *
+     * @throws \InvalidArgumentException если массив пустой
+     *
+     * @example
+     * ->select(['ID', 'NAME'])
+     * ->select(['ID', 'NAME', 'PROPERTY_PRICE'])
      */
     public function select(array $fields): static
     {
@@ -30,9 +35,16 @@ trait SelectTrait
     }
 
     /**
-     * Добавить поля к SELECT не затирая предыдущие.
+     * Добавить поля к SELECT без удаления уже выбранных.
      *
-     * ->select(['ID', 'NAME'])->addSelect('SORT', 'PROPERTY_PRICE')
+     * @param string ...$fields Поля для добавления
+     *
+     * @return static
+     *
+     * @throws \InvalidArgumentException если передан пустой список
+     *
+     * @example
+     * ->select(['ID'])->addSelect('NAME', 'SORT')
      */
     public function addSelect(string ...$fields): static
     {
@@ -49,7 +61,11 @@ trait SelectTrait
 
     /**
      * Выбрать все базовые поля элемента (SELECT *).
-     * Это поведение GetList по умолчанию — метод для явного обозначения намерения.
+     *
+     * @return static
+     *
+     * @example
+     * ->selectAll()
      */
     public function selectAll(): static
     {
@@ -58,8 +74,14 @@ trait SelectTrait
     }
 
     /**
-     * Выбрать все свойства инфоблока (PROPERTY_*).
-     * Работает только если в фильтре задан один конкретный IBLOCK_ID.
+     * Добавить все свойства инфоблока (PROPERTY_*).
+     *
+     * Работает корректно только при одном IBLOCK_ID в фильтре.
+     *
+     * @return static
+     *
+     * @example
+     * ->withProperties()
      */
     public function withProperties(): static
     {
@@ -71,9 +93,16 @@ trait SelectTrait
     }
 
     /**
-     * Добавить конкретные свойства к выборке.
+     * Добавить конкретные свойства инфоблока к выборке.
      *
-     * ->withProperty('PRICE', 'COLOR', 'BRAND')
+     * @param string ...$propertyCodes Коды свойств (PRICE, COLOR и т.д.)
+     *
+     * @return static
+     *
+     * @throws \InvalidArgumentException если список пустой
+     *
+     * @example
+     * ->withProperty('PRICE', 'COLOR')
      */
     public function withProperty(string ...$propertyCodes): static
     {
@@ -92,9 +121,14 @@ trait SelectTrait
     /**
      * GROUP BY — задать поля группировки.
      *
-     * ->groupBy(['IBLOCK_ID', 'ACTIVE'])
+     * @param array<int, string> $fields Поля группировки
+     *        Пустой массив означает COUNT(*)
      *
-     * Пустой массив [] означает «только COUNT» (GetList вернёт число).
+     * @return static
+     *
+     * @example
+     * ->groupBy(['IBLOCK_ID', 'ACTIVE'])
+     * ->groupBy([]) // COUNT
      */
     public function groupBy(array $fields = []): static
     {

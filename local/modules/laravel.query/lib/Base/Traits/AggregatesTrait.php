@@ -11,9 +11,21 @@ namespace Query\Base\Traits;
 trait AggregatesTrait
 {
     /**
-     * Вернуть все результаты как массив массивов.
+     * Агрегирующие и терминальные методы — выполняют запрос и возвращают результат.
      *
-     * @return array[]
+     * ⚠️ ВАЖНО:
+     * Все методы этого трейта являются "terminal operations"
+     * (завершают цепочку построения запроса).
+     *
+     * Требует:
+     *   - executeGetList(): \CIBlockResult
+     *   - executeCount(): int
+     *
+     * Работает поверх состояния BaseQuery:
+     *   - filter
+     *   - select
+     *   - order
+     *   - pagination
      */
     public function get(): array
     {
@@ -28,7 +40,12 @@ trait AggregatesTrait
     }
 
     /**
-     * Вернуть первый элемент или null.
+     * Получить первый элемент выборки.
+     *
+     * ⚠️ Временно применяет limit(1) без изменения исходного состояния билдера.
+     *
+     * @return array<string, mixed>|null
+     *         Первый найденный элемент или null, если записей нет.
      */
     public function first(): ?array
     {
@@ -50,8 +67,10 @@ trait AggregatesTrait
     }
 
     /**
-     * Вернуть количество записей.
-     * Использует GetList с пустым $arGroupBy = [] — Битрикс вернёт COUNT.
+     * Получить количество записей по текущему фильтру.
+     *
+     * @return int
+     *         Количество записей (COUNT)
      */
     public function count(): int
     {
@@ -60,7 +79,10 @@ trait AggregatesTrait
     }
 
     /**
-     * Проверить существование хотя бы одной записи.
+     * Проверить наличие хотя бы одной записи.
+     *
+     * @return bool
+     *         true — если записи существуют
      */
     public function exists(): bool
     {
@@ -68,7 +90,10 @@ trait AggregatesTrait
     }
 
     /**
-     * Проверить что записей нет.
+     * Проверить отсутствие записей.
+     *
+     * @return bool
+     *         true — если записей нет
      */
     public function doesntExist(): bool
     {
@@ -76,27 +101,37 @@ trait AggregatesTrait
     }
 
     /**
-     * Обработать все результаты чанками по $size элементов.
-     * Полезно для массовой обработки без загрузки всего в память.
+     * Обработать результаты чанками (batch processing).
      *
-     * ElementQuery::query()
-     *     ->iblock(5)
-     *     ->active()
-     *     ->chunk(100, function(array $items) {
-     *         foreach ($items as $item) { ... }
-     *     });
+     * Используется для обработки больших выборок без загрузки всей таблицы в память.
      *
-     * Callback может вернуть false чтобы прервать обход.
+     * Пример:
+     *   ElementQuery::query()
+     *       ->iblock(5)
+     *       ->active()
+     *       ->chunk(100, function (array $items, int $page): bool {
+     *           foreach ($items as $item) {
+     *               // обработка
+     *           }
      *
-     * @param int $size Размер чанка
+     *           return true; // вернуть false для остановки
+     *       });
+     *
+     * @param int $size
+     *        Размер одного чанка (количество элементов за итерацию)
+     *
      * @param callable(array<int, array<string, mixed>>, int): (bool|null) $callback
-     *         Callback получает:
-     *           - array $items — массив элементов (каждый элемент — ассоциативный массив)
-     *           - int   $page  — номер текущей страницы (с 1)
+     *        Callback принимает:
+     *          - array $items : элементы текущего чанка
+     *          - int   $page  : номер страницы (начинается с 1)
      *
-     *         Если callback возвращает false — обход прерывается.
+     *        Возврат:
+     *          - false → остановить обработку
+     *          - true|null → продолжить
      *
-     * @return bool false если прервано callback'ом, иначе true
+     * @return bool
+     *         false — если выполнение было прервано callback'ом
+     *         true  — если обработка завершена полностью
      */
     public function chunk(int $size, callable $callback): bool
     {
@@ -121,8 +156,11 @@ trait AggregatesTrait
     }
 
     /**
-     * Вернуть нативный объект CIBlockResult без итерирования.
-     * Escape-хатч для совместимости со старым кодом.
+     * Вернуть нативный CIBlockResult (Bitrix API).
+     *
+     * ⚠️ Escape-хук для legacy-кода.
+     *
+     * @return \CIBlockResult
      */
     public function getResult(): \CIBlockResult
     {
@@ -130,13 +168,23 @@ trait AggregatesTrait
     }
 
     /**
-     * Вернуть массив значений одного поля (как pluck в Laravel).
+     * Извлечь значения одного поля (аналог Laravel pluck()).
      *
-     * ElementQuery::query()->iblock(5)->pluck('NAME')
-     * // => ['Товар 1', 'Товар 2', ...]
+     * Пример:
+     *   pluck('NAME')
+     *   => ['Товар 1', 'Товар 2']
      *
-     * ElementQuery::query()->iblock(5)->pluck('NAME', 'ID')
-     * // => [42 => 'Товар 1', 43 => 'Товар 2', ...]
+     *   pluck('NAME', 'ID')
+     *   => [42 => 'Товар 1', 43 => 'Товар 2']
+     *
+     * @param string $valueField
+     *        Поле, значения которого нужно извлечь
+     *
+     * @param string $keyField
+     *        Поле, которое будет ключом массива (опционально)
+     *
+     * @return array<int|string, mixed>
+     *         Массив значений или key-value структура
      */
     public function pluck(string $valueField, string $keyField = ''): array
     {

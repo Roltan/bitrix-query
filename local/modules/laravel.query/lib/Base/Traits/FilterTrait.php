@@ -39,12 +39,24 @@ trait FilterTrait
     // ──────────────────────────────────────────────
 
     /**
-     * Универсальное AND-условие.
+     * Универсальное AND-условие фильтрации.
      *
-     * ->where('NAME', 'Товар')               // равенство
-     * ->where('SORT', '>', 10)               // сравнение
-     * ->where('NAME', 'like', '%Товар%')     // LIKE
-     * ->where('ID', [1, 2, 3])              // IN
+     * Поддерживает 3 режима:
+     *
+     * 1) where('NAME', 'Товар')
+     *    → NAME = 'Товар'
+     *
+     * 2) where('SORT', '>', 10)
+     *    → >SORT = 10
+     *
+     * 3) where('NAME', 'like', '%Товар%')
+     *    → %NAME = '%Товар%'
+     *
+     * @param string $field
+     * @param mixed $operatorOrValue
+     * @param mixed|null $value
+     *
+     * @return static
      */
     public function where(string $field, mixed $operatorOrValue, mixed $value = null): static
     {
@@ -60,10 +72,14 @@ trait FilterTrait
     }
 
     /**
-     * WHERE field NOT.
+     * NOT условие.
      *
-     * ->whereNot('ACTIVE', 'N')
-     * ->whereNot('ID', [1, 2, 3])
+     * whereNot('ACTIVE', 'Y')
+     * → !ACTIVE = 'Y'
+     *
+     * @param string $field
+     * @param mixed $value
+     * @return static
      */
     public function whereNot(string $field, mixed $value): static
     {
@@ -72,7 +88,14 @@ trait FilterTrait
     }
 
     /**
-     * WHERE field IN (values).
+     * WHERE IN условие.
+     *
+     * whereIn('ID', [1,2,3])
+     * → ID = [1,2,3]
+     *
+     * @param string $field
+     * @param array<int, mixed> $values
+     * @return static
      */
     public function whereIn(string $field, array $values): static
     {
@@ -81,7 +104,14 @@ trait FilterTrait
     }
 
     /**
-     * WHERE field NOT IN (values).
+     * WHERE field NOT IN.
+     *
+     * whereNotIn('ID', [1,2,3])
+     * → !ID = [1,2,3]
+     *
+     * @param string $field
+     * @param array<int, mixed> $values
+     * @return static
      */
     public function whereNotIn(string $field, array $values): static
     {
@@ -90,7 +120,15 @@ trait FilterTrait
     }
 
     /**
-     * WHERE field BETWEEN min AND max.
+     * Диапазон значений.
+     *
+     * whereBetween('PRICE', 100, 500)
+     * → >=PRICE = 100 AND <=PRICE = 500
+     *
+     * @param string $field
+     * @param mixed $min
+     * @param mixed $max
+     * @return static
      */
     public function whereBetween(string $field, mixed $min, mixed $max): static
     {
@@ -100,7 +138,12 @@ trait FilterTrait
     }
 
     /**
-     * WHERE field IS NULL / пусто.
+     * Проверка на пустое значение.
+     *
+     * whereNull('DATE')
+     *
+     * @param string $field
+     * @return static
      */
     public function whereNull(string $field): static
     {
@@ -109,7 +152,19 @@ trait FilterTrait
     }
 
     /**
-     * WHERE field LIKE value.
+     * LIKE-условие (частичное совпадение).
+     *
+     * Преобразуется в фильтр Bitrix:
+     *   '%FIELD' => 'value'
+     *
+     * Пример:
+     *   ->whereLike('NAME', 'iphone')
+     *   => NAME LIKE '%iphone%'
+     *
+     * @param string $field  Поле инфоблока
+     * @param string $value  Поисковая строка (без %)
+     *
+     * @return static
      */
     public function whereLike(string $field, string $value): static
     {
@@ -118,11 +173,21 @@ trait FilterTrait
     }
 
     /**
-     * Фильтр по свойству инфоблока (AND).
+     * Фильтр по свойству инфоблока.
      *
-     * ->whereProperty('PRICE', 1000)
-     * ->whereProperty('PRICE', '>=', 1000)
-     * ->whereProperty('COLOR', 'like', '%red%')
+     * Поддержка:
+     * - equals
+     * - comparison operators
+     * - like
+     *
+     * Примеры:
+     * whereProperty('PRICE', 100)
+     * whereProperty('PRICE', '>=', 100)
+     *
+     * @param string $propertyCode
+     * @param mixed $operatorOrValue
+     * @param mixed|null $value
+     * @return static
      */
     public function whereProperty(string $propertyCode, mixed $operatorOrValue, mixed $value = null): static
     {
@@ -134,18 +199,17 @@ trait FilterTrait
     // ──────────────────────────────────────────────
 
     /**
-     * Добавить OR-условие.
+     * OR условие.
      *
-     * Несколько вызовов orWhere подряд попадают в ОДНУ OR-группу:
+     * ВАЖНО: создаёт отдельную OR-группу.
      *
-     *   ->where('IBLOCK_ID', 5)
-     *   ->orWhere('NAME', 'Товар А')
-     *   ->orWhere('NAME', 'Товар Б')
+     * orWhere('NAME', 'A')
+     * → OR(NAME = A)
      *
-     * Генерирует:
-     *   IBLOCK_ID = 5 AND (NAME = 'Товар А' OR NAME = 'Товар Б')
-     *
-     * Чтобы начать новую независимую OR-группу — используй orGroup().
+     * @param string $field
+     * @param mixed $operatorOrValue
+     * @param mixed|null $value
+     * @return static
      */
     public function orWhere(string $field, mixed $operatorOrValue, mixed $value = null): static
     {
@@ -160,12 +224,19 @@ trait FilterTrait
     }
 
     /**
-     * OR-группа через callback (Laravel-style)
+     * Группировка OR условий через callback.
      *
-     * ->orGroup(function($q) {
+     * Пример:
+     *
+     * orGroup(function($q) {
      *     $q->where('NAME', 'A')
-     *       ->where('CODE', 'b');
+     *       ->where('CODE', 'B');
      * })
+     *
+     * → (NAME = A OR CODE = B)
+     *
+     * @param callable(static): void $callback
+     * @return static
      */
     public function orGroup(callable $callback): static
     {
@@ -187,8 +258,17 @@ trait FilterTrait
     /**
      * OR-условие по свойству инфоблока.
      *
-     * ->orWhereProperty('COLOR', 'red')
-     * ->orWhereProperty('COLOR', '!=', 'blue')
+     * Делегирует в orWhere(), автоматически добавляя префикс PROPERTY_.
+     *
+     * Примеры:
+     *   ->orWhereProperty('COLOR', 'red')
+     *   ->orWhereProperty('PRICE', '>=', 1000)
+     *
+     * @param string $propertyCode     Код свойства (без PROPERTY_)
+     * @param mixed  $operatorOrValue  Оператор (=, !=, >, <, like, и т.д.) или значение
+     * @param mixed  $value            Значение (если указан оператор)
+     *
+     * @return static
      */
     public function orWhereProperty(string $propertyCode, mixed $operatorOrValue, mixed $value = null): static
     {
@@ -196,9 +276,10 @@ trait FilterTrait
     }
 
     /**
-     * Передать готовый OR-блок напрямую — для сложных случаев.
+     * Добавить готовый OR-блок (raw массив Bitrix).
      *
-     * ->orRaw(['LOGIC' => 'OR', 'NAME' => 'А', '=CODE' => 'b'])
+     * @param array<string, mixed> $orBlock
+     * @return static
      */
     public function orRaw(array $orBlock): static
     {
@@ -216,7 +297,10 @@ trait FilterTrait
     // ──────────────────────────────────────────────
 
     /**
-     * Фильтр по инфоблоку.
+     * Установить инфоблок.
+     *
+     * @param int $iblockId
+     * @return static
      */
     public function iblock(int $iblockId): static
     {
@@ -225,7 +309,10 @@ trait FilterTrait
     }
 
     /**
-     * Только активные записи.
+     * Только активные элементы.
+     *
+     * @param bool $active
+     * @return static
      */
     public function active(bool $active = true): static
     {
@@ -236,7 +323,9 @@ trait FilterTrait
     /**
      * Фильтр по секции.
      *
-     * @param int|int[] $sectionId
+     * @param int|array<int> $sectionId
+     * @param bool $includeSubsections
+     * @return static
      */
     public function section(int|array $sectionId, bool $includeSubsections = false): static
     {
@@ -248,7 +337,12 @@ trait FilterTrait
     }
 
     /**
-     * Элементы активные на текущий момент (ACTIVE_FROM / ACTIVE_TO).
+     * Ограничить выборку только активными по датам элементами.
+     *
+     * Добавляет в фильтр:
+     *   ACTIVE_DATE = 'Y'
+     *
+     * @return static
      */
     public function activeDate(): static
     {
@@ -257,7 +351,15 @@ trait FilterTrait
     }
 
     /**
-     * Показывать историю workflow.
+     * Включить элементы из истории workflow.
+     *
+     * Добавляет в фильтр:
+     *   SHOW_HISTORY = 'Y'
+     *
+     * Используется для получения элементов,
+     * которые находятся в изменённых/архивных версиях.
+     *
+     * @return static
      */
     public function withHistory(): static
     {
@@ -266,7 +368,19 @@ trait FilterTrait
     }
 
     /**
-     * Добавить произвольный кусок фильтра (raw-массив, как в GetList).
+     * Добавить "сырой" кусок фильтра Bitrix (array как в CIBlock::GetList).
+     *
+     * ⚠️ МЕРДЖИТСЯ С ТЕКУЩИМ фильтром без проверки конфликтов.
+     *
+     * @param array<string, mixed> $filterPart
+     *
+     * Пример:
+     *   ->whereRaw([
+     *       '>ID' => 10,
+     *       'ACTIVE' => 'Y',
+     *   ])
+     *
+     * @return static
      */
     public function whereRaw(array $filterPart): static
     {
@@ -279,12 +393,21 @@ trait FilterTrait
     // ──────────────────────────────────────────────
 
     /**
-     * Собрать итоговый $arFilter для передачи в GetList.
+     * Собирает итоговый фильтр для CIBlockElement::GetList.
      *
-     * Склеивает AND-условия ($this->filter) и все OR-группы ($this->orGroups)
-     * в один массив, который Битрикс умеет парсить.
+     * Возвращает структуру:
+     * [
+     *   'IBLOCK_ID' => 5,
+     *   'ACTIVE' => 'Y',
+     *   [
+     *     'LOGIC' => 'OR',
+     *     ...
+     *   ]
+     * ]
      *
-     * @internal вызывается из BaseQuery::executeGetList()
+     * @internal используется только внутри Query Builder
+     *
+     * @return array<string, mixed>
      */
     protected function buildFilter(): array
     {
@@ -304,7 +427,16 @@ trait FilterTrait
     // ──────────────────────────────────────────────
 
     /**
-     * Преобразовать оператор в префикс фильтра Битрикса.
+     * Преобразует SQL-like оператор в формат Bitrix фильтра.
+     *
+     * '='   → '='
+     * '!='  → '!'
+     * 'like'→ '%'
+     *
+     * @param string $operator
+     * @return string
+     *
+     * @throws \InvalidArgumentException
      */
     private function resolveOperatorPrefix(string $operator): string
     {
@@ -323,9 +455,13 @@ trait FilterTrait
     }
 
     /**
-     * Собрать пару [ключ => значение] для одного условия.
+     * Преобразует условие в формат Bitrix filter pair.
      *
-     * @return array{string, mixed}  [filterKey, value]
+     * @param string $field
+     * @param mixed $operatorOrValue
+     * @param mixed $value
+     *
+     * @return array{string, mixed}
      */
     private function buildConditionPair(string $field, mixed $operatorOrValue, mixed $value): array
     {

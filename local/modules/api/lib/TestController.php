@@ -17,9 +17,10 @@ class TestController extends Controller
         ];
     }
 
-    public function testAction() {
+    public function testAction()
+    {
         dd(ElementQuery::query()
-            ->where('IBLOCK_ID', 5)
+            ->iblock(5)
             ->first());
     }
 }

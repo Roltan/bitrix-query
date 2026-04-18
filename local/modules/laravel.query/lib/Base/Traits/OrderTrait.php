@@ -12,11 +12,18 @@ use Psr\Log\InvalidArgumentException;
 trait OrderTrait
 {
     /**
-     * Задать сортировку, полностью заменяя предыдущую.
+     * Задать сортировку (полная замена предыдущей).
      *
-     * ->orderBy('SORT')                             // ASC по умолчанию
-     * ->orderBy('DATE_CREATE', 'DESC')
-     * ->orderBy(['SORT' => 'ASC', 'ID' => 'DESC'])  // несколько полей сразу
+     * @param string|array<string, string> $field
+     *        - string: имя поля
+     *        - array: ['FIELD' => 'ASC|DESC']
+     *
+     * @param string $direction
+     *        ASC или DESC (по умолчанию ASC)
+     *
+     * @throws InvalidArgumentException если direction некорректный
+     *
+     * @return static
      */
     public function orderBy(string|array $field, string $direction = 'ASC'): static
     {
@@ -33,9 +40,14 @@ trait OrderTrait
     }
 
     /**
-     * Добавить поле сортировки не затирая предыдущие.
+     * Добавить сортировку без удаления предыдущей.
      *
-     * ->orderBy('SORT')->addOrderBy('ID', 'DESC')
+     * @param string $field     Поле сортировки
+     * @param string $direction ASC|DESC
+     *
+     * @throws InvalidArgumentException если direction некорректный
+     *
+     * @return static
      */
     public function addOrderBy(string $field, string $direction = 'ASC'): static
     {
@@ -48,9 +60,11 @@ trait OrderTrait
     }
 
     /**
-     * Сортировка по убыванию — синтаксический сахар.
+     * Сортировка по убыванию (синтаксический сахар).
      *
-     * ->orderByDesc('DATE_CREATE')
+     * @param string $field
+     *
+     * @return static
      */
     public function orderByDesc(string $field): static
     {
@@ -58,7 +72,11 @@ trait OrderTrait
     }
 
     /**
-     * Случайная сортировка (RAND).
+     * Случайная сортировка.
+     *
+     * ⚠️ Bitrix: работает через RAND (не SQL ORDER BY RAND() напрямую)
+     *
+     * @return static
      */
     public function inRandomOrder(): static
     {
@@ -67,9 +85,15 @@ trait OrderTrait
     }
 
     /**
-     * Сортировка по полю свойства инфоблока, полностью заменяя предыдущую
+     * Сортировка по свойству инфоблока (полная замена).
      *
-     * ->orderByProperty('PRICE', 'DESC')
+     * Пример:
+     *   ->orderByProperty('PRICE', 'DESC')
+     *
+     * @param string $propertyCode Код свойства (без PROPERTY_)
+     * @param string $direction    ASC|DESC
+     *
+     * @return static
      */
     public function orderByProperty(string $propertyCode, string $direction = 'ASC'): static
     {
@@ -77,9 +101,15 @@ trait OrderTrait
     }
 
     /**
-     * Добавить поле сортировки по полю свойства инфоблока не затирая предыдущие.
+     * Добавить сортировку по свойству инфоблока.
      *
-     * ->addOrderByProperty('PRICE', 'DESC')
+     * Пример:
+     *   ->addOrderByProperty('PRICE', 'DESC')
+     *
+     * @param string $propertyCode Код свойства
+     * @param string $direction    ASC|DESC
+     *
+     * @return static
      */
     public function addOrderByProperty(string $propertyCode, string $direction = 'ASC'): static
     {
@@ -87,8 +117,19 @@ trait OrderTrait
     }
 
     /**
-     * Передать массив сортировки напрямую — полная замена.
-     * Escape-хатч для нестандартных случаев.
+     * Передать сортировку "как есть" (raw режим).
+     *
+     * ⚠️ Полностью отключает валидацию и нормализацию.
+     * Используется только для нестандартных кейсов Bitrix.
+     *
+     * @param array<string, string> $order
+     *        Пример:
+     *        [
+     *            'SORT' => 'ASC',
+     *            'ID'   => 'DESC'
+     *        ]
+     *
+     * @return static
      */
     public function orderByRaw(array $order): static
     {
