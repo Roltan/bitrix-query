@@ -1,4 +1,5 @@
 <?php
+
 class Autoloader
 {
     private $prefix;
@@ -28,3 +29,6 @@ class Autoloader
 
 // Регистрируем автозагрузчик
 new Autoloader('Api', __DIR__ . '/../../modules/api/lib/');
+new Autoloader('Query', __DIR__ . '/../../modules/laravel.query/lib/');
+\Bitrix\Main\Loader::includeModule('main');
+\Bitrix\Main\Loader::includeModule('iblock');

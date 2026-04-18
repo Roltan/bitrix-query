@@ -5,7 +5,7 @@ use Api\AuthController;
 use Api\UserController;
 use Api\PasswordController;
 
-//\Bitrix\Main\Loader::includeModule('custom_orm_autoload');
+\Bitrix\Main\Loader::includeModule('laravel.query');
 
 return function (RoutingConfigurator $routes) {
     $routes->prefix('api')->group(function (RoutingConfigurator $routes) {
@@ -26,5 +26,7 @@ return function (RoutingConfigurator $routes) {
             $routes->get('info', [UserController::class, 'info']);
             $routes->post('info', [UserController::class, 'changeUser']);
         });
+
+        $routes->get('test', [\Api\TestController::class, 'test']);
     });
 };
