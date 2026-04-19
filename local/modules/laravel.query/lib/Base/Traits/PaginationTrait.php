@@ -118,7 +118,7 @@ trait PaginationTrait
     {
         $this->navParams  = [
             'nPageSize'    => $pageSize,
-            'nCurrentPage' => $page ?? (int)($_REQUEST[$pageParam] ?? 1),
+            'iNumPage' => $page ?? (int)($_REQUEST[$pageParam] ?? 1),
         ];
         $this->limitValue  = false; // сбрасываем limit если был
         $this->offsetValue = 0;
