@@ -2,6 +2,8 @@
 
 namespace Query\Base\Traits;
 
+use Bitrix\Security\LogicException;
+
 /**
  * Методы фильтрации (WHERE-часть запроса).
  *
@@ -67,6 +69,7 @@ trait FilterTrait
 
         $prefix = $this->resolveOperatorPrefix((string)$operatorOrValue);
         $this->filter[$prefix . $field] = $value;
+        $this->stack[] = 'where';
 
         return $this;
     }
@@ -84,6 +87,7 @@ trait FilterTrait
     public function whereNot(string $field, mixed $value): static
     {
         $this->filter['!' . $field] = $value;
+        $this->stack[] = 'whereNot';
         return $this;
     }
 
@@ -100,6 +104,7 @@ trait FilterTrait
     public function whereIn(string $field, array $values): static
     {
         $this->filter[$field] = $values;
+        $this->stack[] = 'whereIn';
         return $this;
     }
 
@@ -117,6 +122,7 @@ trait FilterTrait
     public function whereNotIn(string $field, array $values): static
     {
         $this->filter['!' . $field] = $values;
+        $this->stack[] = 'whereNotIn';
         return $this;
     }
 
@@ -135,6 +141,7 @@ trait FilterTrait
     {
         $this->filter['>=' . $field] = $min;
         $this->filter['<=' . $field] = $max;
+        $this->stack[] = 'whereBetween';
         return $this;
     }
 
@@ -149,6 +156,7 @@ trait FilterTrait
     public function whereNull(string $field): static
     {
         $this->filter[$field] = false;
+        $this->stack[] = 'whereNull';
         return $this;
     }
 
@@ -170,6 +178,7 @@ trait FilterTrait
     public function whereLike(string $field, string $value): static
     {
         $this->filter['%' . $field] = $value;
+        $this->stack[] = 'whereLike';
         return $this;
     }
 
@@ -214,12 +223,26 @@ trait FilterTrait
      */
     public function orWhere(string $field, mixed $operatorOrValue, mixed $value = null): static
     {
+        if(empty($this->stack)) {
+            throw new \LogicException("orWhere() requires a previous AND condition.\nYou cannot start a query with OR. Add where(), iblock(), active(), etc. first.");
+        }
+
         $condition = $this->buildConditionPair($field, $operatorOrValue, $value);
 
-        $this->orGroups[] = [
-            'LOGIC' => 'OR',
-            $condition[0] => $condition[1],
-        ];
+        if (str_starts_with(array_reverse($this->stack)[0], 'or')) {
+            $groupKey = array_key_last($this->orGroups);
+            $this->orGroups[$groupKey][] = [$condition[0] => $condition[1]];
+        } else {
+            $prevCondition = array_reverse($this->filter);
+            unset($this->filter[array_keys($prevCondition)[0]]);
+
+            $this->orGroups[] = [
+                'LOGIC' => 'OR',
+                [array_keys($prevCondition)[0] => array_values($prevCondition)[0]],
+                [$condition[0] => $condition[1]],
+            ];
+        }
+        $this->stack[] = 'orWhere';
 
         return $this;
     }
@@ -252,6 +275,7 @@ trait FilterTrait
             'LOGIC' => 'OR',
             ...$builder->filter,
         ];
+        $this->stack[] = 'orGroup';
 
         return $this;
     }
@@ -289,6 +313,7 @@ trait FilterTrait
         }
 
         $this->orGroups[] = $orBlock;
+        $this->stack[] = 'orRaw';
 
         return $this;
     }
@@ -310,6 +335,7 @@ trait FilterTrait
         } else {
             $this->filter['IBLOCK_CODE'] = $iblockId;
         }
+        $this->stack[] = 'iblock';
         return $this;
     }
 
@@ -322,6 +348,7 @@ trait FilterTrait
     public function active(bool $active = true): static
     {
         $this->filter['ACTIVE'] = $active ? 'Y' : 'N';
+        $this->stack[] = 'active';
         return $this;
     }
 
@@ -338,6 +365,7 @@ trait FilterTrait
         if ($includeSubsections) {
             $this->filter['INCLUDE_SUBSECTIONS'] = 'Y';
         }
+        $this->stack[] = 'section';
         return $this;
     }
 
@@ -352,6 +380,7 @@ trait FilterTrait
     public function activeDate(): static
     {
         $this->filter['ACTIVE_DATE'] = 'Y';
+        $this->stack[] = 'activeDate';
         return $this;
     }
 
@@ -369,6 +398,7 @@ trait FilterTrait
     public function withHistory(): static
     {
         $this->filter['SHOW_HISTORY'] = 'Y';
+        $this->stack[] = 'withHistory';
         return $this;
     }
 
@@ -390,6 +420,7 @@ trait FilterTrait
     public function whereRaw(array $filterPart): static
     {
         $this->filter[] = $filterPart;
+        $this->stack[] = 'whereRaw';
         return $this;
     }
 

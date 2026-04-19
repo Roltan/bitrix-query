@@ -87,6 +87,7 @@ abstract class BaseQuery
      * @var array<int, array{relation: string, property: string, callback: callable|null}>
      */
     protected array $relations = [];
+    protected array $stack = [];
 
     // ──────────────────────────────────────────────
     // Фабричный метод
@@ -126,7 +127,12 @@ abstract class BaseQuery
      */
     public function getFilter(): array
     {
-        return $this->filter;
+        if (empty($this->orGroups)) {
+            return $this->filter;
+        }
+
+        // Склеиваем: сначала AND-условия, потом OR-группы как вложенные массивы
+        return array_merge($this->filter, $this->orGroups);
     }
 
     /**
