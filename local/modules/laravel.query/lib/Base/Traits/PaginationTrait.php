@@ -140,7 +140,7 @@ trait PaginationTrait
     {
         $this->navParams  = [
             'nPageSize'    => $pageSize,
-            'nCurrentPage' => max(1, $page),
+            'iNumPage' => max(1, $page),
         ];
         $this->limitValue  = false;
         $this->offsetValue = 0;
@@ -185,7 +185,7 @@ trait PaginationTrait
      *
      * @return array<string, mixed>|false
      */
-    protected function buildNavParams(): array|false
+    public function buildNavParams(): array|false
     {
         if ($this->navParams !== false) {
             return $this->navParams;

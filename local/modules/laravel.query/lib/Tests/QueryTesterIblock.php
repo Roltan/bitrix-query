@@ -54,33 +54,48 @@ class QueryTesterIblock
 
         try {
             $qbResult = $qbCallback($ids);
-
-            // Bitrix
             $bxResult = $bxCallback($ids);
 
-            // normalize
-            $qbResult = $this->normalize($qbResult);
-            $bxResult = $this->normalize($bxResult);
+            $qbResult = $this->normalizeAny($qbResult);
+            $bxResult = $this->normalizeAny($bxResult);
 
             if ($qbResult === $bxResult) {
                 echo "✅ {$name}\n";
             } else {
                 echo "❌ {$name}\n";
-                print_r($qbResult);
-                print_r($bxResult);
+                var_dump($qbResult);
+                var_dump($bxResult);
             }
 
         } finally {
             $this->cleanup($ids);
         }
     }
+    private function normalizeAny($value)
+    {
+        // null / bool / int / string — как есть
+        if (!is_array($value)) {
+            return is_numeric($value) ? (int)$value : $value;
+        }
 
-    private function normalize(array $rows): array
+        // массив
+        return $this->normalizeArray($value);
+    }
+
+    private function normalizeArray(array $rows): array
     {
         return array_map(function ($row) {
+
+            // если это НЕ массив (например pluck → [1,2,3])
+            if (!is_array($row)) {
+                return is_numeric($row) ? (int)$row : $row;
+            }
+
+            // обычная строка результата Bitrix
             return array_map(function ($value) {
                 return is_numeric($value) ? (int)$value : $value;
             }, $row);
+
         }, $rows);
     }
 

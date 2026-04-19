@@ -53,27 +53,20 @@ trait AggregatesTrait
      */
     public function first(): ?array
     {
-        // Временно ставим limit(1) не меняя оригинальный limitValue
-        $originalLimit = $this->limitValue;
-        $originalNav = $this->navParams;
+        $clone = clone $this;
+        $clone->limitValue = 1;
+        $clone->navParams = false;
 
-        $this->limitValue = 1;
-        $this->navParams = false;
-
-        $res = $this->executeGetList();
+        $res = $clone->executeGetList();
         $row = $res->Fetch() ?: null;
-
-        // Восстанавливаем
-        $this->limitValue = $originalLimit;
-        $this->navParams = $originalNav;
 
         if ($row === null || $row === false) {
             return null;
         }
 
         // Relations для первого элемента тоже загружаем
-        if (!empty($this->relations)) {
-            $items = $this->loadRelationsElements([$row]);
+        if (!empty($clone->relations)) {
+            $items = $clone->loadRelationsElements([$row]);
             return $items[0] ?? null;
         }
 
@@ -150,6 +143,8 @@ trait AggregatesTrait
     public function chunk(int $size, callable $callback): bool
     {
         $page = 1;
+        $maxPages = 1000; // safeguard
+        $firstId = null;
 
         do {
             $items = $this->forPage($page, $size)->get();
@@ -158,11 +153,21 @@ trait AggregatesTrait
                 break;
             }
 
+            if($firstId === null) {
+                $firstId = $items[0]['ID'];
+            } elseif($firstId == $items[0]['ID']) {
+                return true;
+            }
+
             if ($callback($items, $page) === false) {
                 return false;
             }
 
             $page++;
+
+            if ($page > $maxPages) {
+                throw new \RuntimeException('Chunk exceeded max pages (possible infinite loop)');
+            }
 
         } while (count($items) === $size);
 

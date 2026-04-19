@@ -214,14 +214,14 @@ class ElementQuery extends BaseQuery
     protected function executeCount(): int
     {
         $result = \CIBlockElement::GetList(
-            $this->order,
+            [],
             $this->buildFilter(),
             [],     // пустой массив — Битрикс вернёт число
             false,
-            $this->select
+            ['ID']
         );
 
-        return is_int($result) ? $result : 0;
+        return is_int((int)$result) ? $result : 0;
     }
 
     // ──────────────────────────────────────────────
