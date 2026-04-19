@@ -36,6 +36,10 @@ trait AggregatesTrait
             $items[] = $row;
         }
 
+        if (!empty($this->relations)) {
+            $items = $this->loadRelationsElements($items);
+        }
+
         return $items;
     }
 
@@ -62,6 +66,16 @@ trait AggregatesTrait
         // Восстанавливаем
         $this->limitValue = $originalLimit;
         $this->navParams = $originalNav;
+
+        if ($row === null || $row === false) {
+            return null;
+        }
+
+        // Relations для первого элемента тоже загружаем
+        if (!empty($this->relations)) {
+            $items = $this->loadRelationsElements([$row]);
+            return $items[0] ?? null;
+        }
 
         return $row ?: null;
     }

@@ -22,11 +22,9 @@ class TestController extends Controller
         $query = ElementQuery::query()
             ->iblock(5)
             ->select(['ID'])
-            ->whereRaw([[
-                'LOGIC' => 'OR',
-                ['%NAME' => 'QB_TEST'],
-                ['><SORT' => [100, 300]]
-            ]]);
+            ->withElement('NEWS', function (ElementQuery $query) {
+                $query->select(['ID', 'NAME']);
+            });
         dd($query->get());
     }
 }

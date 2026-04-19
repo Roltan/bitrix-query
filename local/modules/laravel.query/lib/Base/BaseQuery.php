@@ -6,6 +6,7 @@ use Query\Base\Traits\AggregatesTrait;
 use Query\Base\Traits\FilterTrait;
 use Query\Base\Traits\OrderTrait;
 use Query\Base\Traits\PaginationTrait;
+use Query\Base\Traits\Relations\RelationsElementTrait;
 use Query\Base\Traits\SelectTrait;
 
 /**
@@ -30,6 +31,7 @@ abstract class BaseQuery
     use SelectTrait;
     use PaginationTrait;
     use AggregatesTrait;
+    use RelationsElementTrait;
 
     // ──────────────────────────────────────────────
     // Состояние запроса
@@ -71,6 +73,20 @@ abstract class BaseQuery
 
     /** ID текущего элемента — задаётся в find(), используется в update()/delete() */
     protected int|false $currentId = false;
+
+    /**
+     * Зарегистрированные eager-relations.
+     *
+     * Структура каждого элемента:
+     * [
+     *   'relation' => 'BRAND',                    // имя (без _ID)
+     *   'property' => 'BRAND_ID',                 // код свойства
+     *   'callback' => callable|null,              // настройка вложенного запроса
+     * ]
+     *
+     * @var array<int, array{relation: string, property: string, callback: callable|null}>
+     */
+    protected array $relations = [];
 
     // ──────────────────────────────────────────────
     // Фабричный метод

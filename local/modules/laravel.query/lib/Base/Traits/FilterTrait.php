@@ -111,6 +111,7 @@ trait FilterTrait
      *
      * @param string $field
      * @param array<int, mixed> $values
+     * @param array<int, mixed> $values
      * @return static
      */
     public function whereNotIn(string $field, array $values): static
@@ -299,12 +300,16 @@ trait FilterTrait
     /**
      * Установить инфоблок.
      *
-     * @param int $iblockId
+     * @param int|string $iblockId
      * @return static
      */
-    public function iblock(int $iblockId): static
+    public function iblock(int|string $iblockId): static
     {
-        $this->filter['IBLOCK_ID'] = $iblockId;
+        if (is_int((int)$iblockId)) {
+            $this->filter['IBLOCK_ID'] = $iblockId;
+        } else {
+            $this->filter['IBLOCK_CODE'] = $iblockId;
+        }
         return $this;
     }
 
