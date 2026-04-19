@@ -6,12 +6,12 @@ require $_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_before.
 
 \Bitrix\Main\Loader::includeModule('iblock');
 
-function bxGet(array $order, array $filter, array $select, $nav = false): array
+function bxGet(array $order, array $filter, array $select, $nav = false, $groupBy = false): array
 {
     $res = CIBlockElement::GetList(
         $order,
         $filter,
-        false,
+        $groupBy,
         $nav,
         $select
     );
